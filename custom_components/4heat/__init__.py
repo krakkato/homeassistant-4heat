@@ -3,7 +3,7 @@ import voluptuous as vol
 import logging
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.core import valid_entity_id
+from homeassistant.core import HomeAssistant, valid_entity_id
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -12,7 +12,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.typing import HomeAssistantType
+
 
 from .const import ATTR_MARKER, ATTR_READING_ID, ATTR_STOVE_ID, DOMAIN, DATA_COORDINATOR, CONF_MODE
 from .coordinator import FourHeatDataUpdateCoordinator
@@ -50,7 +50,7 @@ async def async_setup(hass, config):
 
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Load the saved entities."""
     coordinator = FourHeatDataUpdateCoordinator(
         hass,
@@ -96,10 +96,5 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     
     hass.services.async_register(DOMAIN, "set_value", async_handle_set_value)
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "sensor")
-    )
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "switch")
-    )
+    await hass.config_entries.async_forward_entry_setups(entry, ["sensor", "switch"])
     return True
